@@ -1,0 +1,9 @@
+{
+    "server": [
+        {"host": "localhost", "port": 11211, "weight": 20},
+        {"host": "localhost", "port": 11211, "weight": 20},
+        {"host": "localhost", "port": 11211, "weight": 20},
+        {"host": "localhost", "port": 11211, "weight": 20},
+        {"host": "localhost", "port": 11211, "weight": 20}
+    ]
+}

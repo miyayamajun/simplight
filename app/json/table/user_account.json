@@ -1,0 +1,37 @@
+{
+    "table_name": "user_account",
+    "postfix": "%02d",
+    "division_count": 100,
+    "auto_increment": false,
+    "columns": {
+        "user_id":         {"cast": "int", "unsigned": true, "null": false},
+        "email":           {"cast": "varchar", "length": 100, "null": false},
+        "password_digest": {"cast": "varchar", "length": 255, "null": false},
+        "memo":            {"cast": "text", "null": true},
+        "value":           {"cast": "tinyint", "null": true},
+        "created_at":      {"cast": "timestamp", "default": "0000-00-0000 00:00:00", "null": false},
+        "updated_at":      {"cast": "timestamp", "default": "current_timestamp", "update_current_timestamp": true}
+    },
+    "primary_key": [
+        "user_id"
+    ],
+    "index": [
+        {"index_name": "idx_00", "columns": ["user_id", "created_at", "updated_at"]}
+    ],
+    "unique": [
+        {"columns": ["email"]}
+    ],
+    "lock_key": [
+        "user_id"
+    ],
+    "map": [ 
+        {"key_range_min":0,  "key_range_max": 12, "db":"user_db00", "table_number": 0},
+        {"key_range_min":13, "key_range_max": 24, "db":"user_db00", "table_number": 1},
+        {"key_range_min":25, "key_range_max": 37, "db":"user_db01", "table_number": 0},
+        {"key_range_min":38, "key_range_max": 49, "db":"user_db01", "table_number": 1},
+        {"key_range_min":50, "key_range_max": 62, "db":"user_db02", "table_number": 0},
+        {"key_range_min":63, "key_range_max": 74, "db":"user_db02", "table_number": 1},
+        {"key_range_min":75, "key_range_max": 87, "db":"user_db03", "table_number": 0},
+        {"key_range_min":88, "key_range_max": 99, "db":"user_db03", "table_number": 1}
+    ]
+}

@@ -1,0 +1,41 @@
+{
+    "username": "root",
+    "password": "root",
+    "database_settings": {
+        "data_db": {
+            "master":  {"host": "127.0.0.1", "port": 8889},
+            "slave":   {"host": "127.0.0.1", "port": 8889},
+            "standby": {"host": "127.0.0.1", "port": 8889}
+        },
+        "user_db00": {
+            "master":  {"host": "127.0.0.1", "port": 8889},
+            "slave":   {"host": "127.0.0.1", "port": 8889},
+            "standby": {"host": "127.0.0.1", "port": 8889}
+        },
+        "user_db01": {
+            "master":  {"host": "127.0.0.1", "port": 8889},
+            "slave":   {"host": "127.0.0.1", "port": 8889},
+            "standby": {"host": "127.0.0.1", "port": 8889}
+        },
+        "user_db02": {
+            "master":  {"host": "127.0.0.1", "port": 8889},
+            "slave":   {"host": "127.0.0.1", "port": 8889},
+            "standby": {"host": "127.0.0.1", "port": 8889}
+        },
+        "user_db03": {
+            "master":  {"host": "127.0.0.1", "port": 8889},
+            "slave":   {"host": "127.0.0.1", "port": 8889},
+            "standby": {"host": "127.0.0.1", "port": 8889}
+        },
+        "log_db00": {
+            "master":  {"host": "127.0.0.1", "port": 8889},
+            "slave":   {"host": "127.0.0.1", "port": 8889},
+            "standby": {"host": "127.0.0.1", "port": 8889}
+        },
+        "log_db01": {
+            "master":  {"host": "127.0.0.1", "port": 8889},
+            "slave":   {"host": "127.0.0.1", "port": 8889},
+            "standby": {"host": "127.0.0.1", "port": 8889}
+        }
+    }
+}

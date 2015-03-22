@@ -1,0 +1,7 @@
+# htaccess
+
+RewriteEngine On
+
+RewriteCond %{REQUEST_URI} !^\/(img|css|js)
+RewriteRule ^(.*)$ index.php [L]
+
