@@ -19,7 +19,7 @@ abstract class Accessor
 
     const USE_MASTER = true;
     const USE_SLAVE  = false;
-    const NG_SLAVE_QUERY = '/insert|update|delete|truncate|drop|create|transaciton|lock/i';
+    const NG_SLAVE_QUERY = '/insert|update|delete|truncate|drop|create|transaction|lock/i';
 
     protected static $_instance   = null;
     protected static $_db_config  = array();
