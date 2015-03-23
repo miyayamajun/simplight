@@ -28,6 +28,12 @@ final class Request
     private $_param_map;
     private $_method_type;
 
+    /**
+     * コンストラクタ
+     * @param AppObject $app
+     *
+     * @return void
+     */
     public function __construct($app)
     {
         if (!$app instanceof \Simplight\App) {
@@ -39,6 +45,7 @@ final class Request
 
     /**
      * インスタンスメンバを取得する
+     *
      * @return mixed
      */
     // getControllerName: コントローラ名取得

@@ -13,6 +13,12 @@ final class Hook
     private $_hook_list;
     private $_app;
 
+    /**
+     * コンストラクタ
+     * @param AppObject $app
+     *
+     * @return void
+     */
     public function __construct($app)
     {
         if (!$app instanceof \Simplight\App) {
@@ -24,6 +30,8 @@ final class Hook
 
     /**
      * _hook_listに登録されたHookを処理する
+     *
+     * @return void
      */
     public function execute()
     {
@@ -34,6 +42,8 @@ final class Hook
 
     /**
      * _hook_listをセットする
+     *
+     * @return void
      */
     private function _setup()
     {
@@ -42,6 +52,7 @@ final class Hook
 
     /**
      * jsonから実行可能なHookをリストに登録する
+     *
      * @return array Hookを継承したオブジェクトのリスト
      */
     private function _getHookList()
@@ -83,6 +94,12 @@ class HookBase
 
     private $_app;
 
+    /**
+     * コンストラクタ
+     * @param AppObject $app
+     *
+     * @return void
+     */
     public function __construct($app)
     {
         $this->_app = $app;
@@ -90,6 +107,8 @@ class HookBase
 
     /**
      * target_action_listをもとに実行可能かチェックする
+     *
+     * @return boolean trueなら実行可能
      */
     protected function _validate()
     {
@@ -114,6 +133,8 @@ class HookBase
 
     /**
      * Hookの実行処理本体。子クラスで処理を記述する
+     *
+     * @return void
      */
     public function execute()
     {

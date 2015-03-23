@@ -100,8 +100,9 @@ class Controller
 
     /**
      * Content-Typeを指定する
-     *
      * @param int $type
+     *
+     * @return void
      */
     public function setContentType($type = self::CONTENT_TYPE_HTML)
     {

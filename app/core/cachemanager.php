@@ -18,6 +18,11 @@ class Cachemanager
 
     private $_memcached;
 
+    /**
+     * インスタンスを返す(シングルトン)
+     *
+     * @return CachemanagerObject
+     */
     public static function create()
     {
         if (!defined('MEMCACHED_ENABLE')) {
@@ -29,12 +34,22 @@ class Cachemanager
         return self::$_instance;
     }
 
+    /**
+     * コンストラクタ
+     *
+     * @return void
+     */
     private function __construct()
     {
         $this->_setup();
         $this->_setServerList();
     }
 
+    /**
+     * memcachedの初期設定を行う
+     *
+     * @return void
+     */
     private function _setup()
     {
         $this->_memcached = new \Memcached();
@@ -45,6 +60,11 @@ class Cachemanager
         $this->_memcached->setOptions($option_list);
     }
 
+    /**
+     * 設定情報(連想配列)からサーバリストを読み込み登録する
+     *
+     * @return void
+     */
     private function _setServerList()
     {
         $config_map = $this->_getConfigFromJson();
@@ -55,6 +75,11 @@ class Cachemanager
         $this->_memcached->addServers($server_list);
     }
 
+    /**
+     * 設定ファイル(json)を取得する
+     *
+     * @return array jsonから変換された連想配列
+     */
     private function _getConfigFromJson()
     {
         if (defined('PROD')) {
@@ -71,9 +96,8 @@ class Cachemanager
     }
 
     /**
-     * @name        get
-     * @description memcachedのgetメソッド使用してアイテムを取得する
-     * @param       mixed $key
+     * memcachedのgetメソッド使用してアイテムを取得する
+     * @param mixed $key
      *
      * @return array [$value, $cas]
      */
@@ -86,10 +110,9 @@ class Cachemanager
     } 
 
     /**
-     * @name        set
-     * @description memcachedのsetメソッドでアイテムを格納する
-     * @param       mixed $key
-     * @param       mixed $value
+     * memcachedのsetメソッドでアイテムを格納する
+     * @param mixed $key
+     * @param mixed $value
      *
      * @return boolean
      */
@@ -99,11 +122,10 @@ class Cachemanager
     }
 
     /**
-     * @name        cas
-     * @description memcachedのcasメソッドでアイテムを格納する
-     * @param       mixed $cas
-     * @param       mixed $key
-     * @param       mixed $value
+     * memcachedのcasメソッドでアイテムを格納する
+     * @param mixed $cas
+     * @param mixed $key
+     * @param mixed $value
      *
      * @return boolean
      */
@@ -113,9 +135,8 @@ class Cachemanager
     }
 
     /**
-     * @name        delete
-     * @description memcachedのdeleteメソッドでアイテムを削除
-     * @param       mixed $key
+     * memcachedのdeleteメソッドでアイテムを削除
+     * @param mixed $key
      *
      * @return boolean
      */
@@ -125,10 +146,8 @@ class Cachemanager
     }
     
     /**
-     * @name        searchDelete
-     * @description memacahedサーバに格納されている全てのキーを取得して、
-     *              キーワードにマッチするものを削除する
-     * @param       string $keyword
+     * memacahedサーバに格納されている全てのキーを取得して、キーワードにマッチするものを削除する
+     * @param string $keyword
      *
      * @return array 削除したキーのリスト
      */

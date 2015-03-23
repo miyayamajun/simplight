@@ -13,6 +13,12 @@ final class Autoloader
     private $_app;
     private $_class_map;
 
+    /**
+     * コンストラクタ
+     * @param AppObject $app
+     *
+     * @return void
+     */
     public function __construct($app)
     {
         if (!$app instanceof \Simplight\App) {
