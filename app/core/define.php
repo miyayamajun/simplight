@@ -36,6 +36,8 @@ if (class_exists('Memcached')) {
 /**
  * URL
  */
-define('HTTP_ROOT_URL', "http://{$_SERVER['HTTP_HOST']}");
-define('HTTPS_ROOT_URL', "https://{$_SERVER['HTTP_HOST']}");
+if (isset($_SERVER['HTTP_HOST'])) {
+    define('HTTP_ROOT_URL', "http://{$_SERVER['HTTP_HOST']}");
+    define('HTTPS_ROOT_URL', "https://{$_SERVER['HTTP_HOST']}");
+}
 

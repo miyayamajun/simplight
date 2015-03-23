@@ -14,8 +14,8 @@ if (defined('PROD')) {
     $config_map = json_decode(file_get_contents(JSON_DIR . '/mysql.dev.json'), true);
 }
 
-$username = $json['username'];
-$password = $json['password'];
+$username = $config_map['username'];
+$password = $config_map['password'];
 
 echo "\nデータベース作成開始 ==========================\n\n";
 
