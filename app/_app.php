@@ -31,7 +31,8 @@ final class App
 
     /**
      * Appインスタンスをシングルトンで返す
-     * @return instance App
+     *
+     * @return AppObject
      */
     public static function create()
     {
@@ -43,14 +44,14 @@ final class App
 
     /**
      * 初期化
-     * @return instance App
+     *
+     * @return AppObject
      */
     private function __construct()
     {
         try {
-            $this->_setView();
             $this->_setAutoloader();
-
+            $this->_setView();
             if (!defined('BATCH_MODE')) {
                 $this->_setRequest();
             }
@@ -62,6 +63,7 @@ final class App
 
     /**
      * autoloaderをセットする
+     *
      * @return void
      */
     private function _setAutoloader()
@@ -84,7 +86,18 @@ final class App
     }
 
     /**
+     * Viewをセットする
+     *
+     * @return void
+     */
+    private function _setView()
+    {
+        $this->view = new \Simplight\View($this);
+    }
+
+    /**
      * リクエストメッセージをセットする
+     *
      * @return void
      */
     private function _setRequest()
@@ -92,16 +105,9 @@ final class App
         $this->request = new \Simplight\Request($this);
     }
 
-    private function _setView()
-    {
-        $this->view = new \Smarty();
-        $this->view->setCacheDir(CACHE_DIR . '/smarty');
-        $this->view->setCompileDir(CACHE_DIR . '/smarty_compile');
-        $this->view->setTemplateDir(TEMPLATE_DIR);
-    }
-
     /**
      * コントローラを呼び出して処理を実行する
+     *
      * @return void
      */
     public function main()
@@ -139,6 +145,8 @@ final class App
 
     /**
      * 有効なhookを実行する
+     *
+     * @return void
      */
     private function _executeHook()
     {
@@ -148,6 +156,7 @@ final class App
 
     /**
      * アプリのタイムスタンプを取得する
+     *
      * @return int
      */
     public function getTimestamp()
@@ -159,6 +168,8 @@ final class App
     /**
      * エラー情報をセットして、画面に表示する
      * @param Exception $exception
+     *
+     * @return void
      */
     public function setError(\Exception $exception)
     {
@@ -175,6 +186,8 @@ final class App
      * レスポンスヘッダを生成する
      * @param int $status_code
      * @param int $bytes
+     *
+     * @return void
      */
     private function _setResponsHeader($status_code, $bytes = null)
     {

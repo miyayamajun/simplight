@@ -82,7 +82,7 @@ final class Hook
  *
  * @author https://github.com/miyayamajun
  */
-class HookBase
+abstract class HookBase
 {
     /**
      * 処理を実行するコントローラ名とアクション名を _ (アンダースコア) で繋ぐ

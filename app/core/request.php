@@ -32,14 +32,13 @@ final class Request
      * コンストラクタ
      * @param AppObject $app
      *
-     * @return void
+     * @return RequestObject
      */
     public function __construct($app)
     {
         if (!$app instanceof \Simplight\App) {
             throw new \Exception('Appインスタンス以外からの呼出に対応していません', STATUS_CODE_ERROR);
         }
-
         $this->_setup();
     }
 

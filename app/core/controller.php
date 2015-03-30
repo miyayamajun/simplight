@@ -8,7 +8,7 @@ namespace Simplight;
  *
  * @author https://github.com/miyayamajun
  */
-class Controller
+abstract class Controller
 {
     const PARAM_TYPE_INT      = 1;
     const PARAM_TYPE_STRING   = 2;
@@ -48,6 +48,7 @@ class Controller
         $this->_content_type = self::CONTENT_TYPE_HTML;
         $this->_setParamList();
         $this->setTemplatePath($tpl_path);
+        $this->_defaultAssign();
     }
 
     /**
@@ -158,7 +159,7 @@ class Controller
      */
     protected function _assign($key, $param)
     {
-        $this->_view->assignGlobal($key, $param);
+        $this->_view->assign($key, $param);
     }
 
     /**
@@ -171,5 +172,16 @@ class Controller
         $param_map   = $this->_request->getParamMap(); 
         $this->_get  = $param_map['get'];
         $this->_post = $param_map['post'];
+    }
+
+    /**
+     * 基本的な変数をアサインする
+     *
+     * @return void
+     */
+    protected function _defaultAssign()
+    {
+        $this->_view->assign('controller', $this->_request->getControllerName());
+        $this->_view->assign('action',     $this->_request->getActionName());
     }
 }
