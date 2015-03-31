@@ -21,15 +21,15 @@ abstract class Accessor
     const USE_SLAVE  = false;
     const NG_SLAVE_QUERY = '/insert|update|delete|truncate|drop|create|transaction|lock/i';
 
-    protected static $_instance   = null;
-    protected static $_db_config  = array();
-    protected static $_tbl_config = array();
-    protected static $_dsn_map    = array();
+    protected static $_instance             = null;
+    protected static $_db_config            = array();
+    protected static $_tbl_config           = array();
+    protected static $_dsn_map              = array();
+    protected static $_timestamp_field_list = array();
+    protected static $_primary_key_list     = array();
+    protected static $_field_list           = array();
 
     protected $_get_query;
-    protected $_primary_key_list     = array();
-    protected $_diff_update_key_list = array();
-    protected $_timestamp_filed_list = array();
     protected $_db_handler;
 
     /**
@@ -182,8 +182,9 @@ abstract class Accessor
         list($div_key, $db_handler, $tbl_name) = $this->_getConnectParam($data_list, $div_hint, self::USE_MASTER);
 
         // primary key の無い配列を作る
-        $no_primary_list = $data_list;
-        foreach ($this->_primary_key_list as $primary_key) {
+        $no_primary_list  = $data_list;
+        $primary_key_list = static::$_primary_key_list;
+        foreach ($primary_key_list as $primary_key) {
             if (!isset($no_primary_list[$primary_key])) {
                 continue;
             }
@@ -210,7 +211,7 @@ abstract class Accessor
             $values_str .= empty($values_str) ? '(' : ',(';
             $values_str .= join(',', array_map(function($key) use ($set_prefix) {
                 $data_key = $set_prefix . $key;
-                return in_array($key, $this->_timestamp_field_list) ? "from_unixtime(:{$data_key})" : ":{$data_key}";
+                return in_array($key, static::$_timestamp_field_list) ? "from_unixtime(:{$data_key})" : ":{$data_key}";
             }, array_keys($data_list)));
             $values_str .= ')';
         }
@@ -282,14 +283,15 @@ abstract class Accessor
      */
     protected function _getQueryPhrase($list, $div_str, $key_prefix = '', $isSaveMethod = false)
     {
+        $list = $this->_getFieldDataList($list);
         $keys = array_keys($list);
         $str  = join($div_str, array_map(
             function ($key) use ($key_prefix, $isSaveMethod) {
-                if (in_array($key, $this->_timestamp_field_list)) {
+                if (in_array($key, static::$_timestamp_field_list)) {
                     return "`{$key}`=from_unixtime(:{$key_prefix}{$key})";
                 } else if (strstr($key, '_diff') !== false) {
                     $base_key = str_replace('_diff', '', $key);
-                    if (in_array($base_key, $this->_primary_key_list)) {
+                    if (in_array($base_key, static::$_primary_key_list)) {
                         throw new \Simplight\Exception('プライマリキーは_diff指定できません', 'Accessor Error', STATUS_CODE_ERROR);
                     }
                     return $isSaveMethod ? "`{$base_key}`=:{$key_prefix}{$key}" : "`{$base_key}`=`{$base_key}`+:{$key_prefix}{$key}";
@@ -299,6 +301,40 @@ abstract class Accessor
             }, $keys)
         );
         return $str;
+    }
+
+    /**
+     * フィールドリストに登録されているキーのみの配列を返す
+     * @param &array $list
+     *
+     * @return array
+     */
+    protected function _getFieldDataList($list)
+    {
+        $exist_key_list = array();
+        $return_list       = array();
+        foreach ($list as $key => $data) {
+            $is_diff_key = false;
+            $base_key    = $key;
+            // diff指定かどうかチェック
+            if (strstr($key, '_diff') !== false) {
+                $is_diff_key = true;
+                $base_key = str_replace('_diff', '', $key);
+            }
+            // フィールドに登録されたデータかチェックする
+            if (!in_array($base_key, static::$_field_list)) {
+                continue;
+            }
+            // diff指定の場合は優先するため既存のデータをunset
+            if ($is_diff_key && isset($return_list[$key])) {
+                unset($return_list[$key]);
+            }
+            if (isset($return_list[$key])) {
+                continue;
+            }
+            $return_list[$key] = $data;
+        }
+        return $return_list;
     }
 
     /**
@@ -326,7 +362,7 @@ abstract class Accessor
     protected function _validate($param_list)
     {
         $key_list = array_keys($param_list);
-        if (sort($key_list) != $this->_primary_key_list) {
+        if (sort($key_list) != static::$_primary_key_list) {
             throw new \Simplight\Exception('プライマリキーが一致しません', 'Accessor Error', STATUS_CODE_ERROR);
         }
         if (!isset($param_list[static::DIVISION_KEY_NAME])) {
@@ -342,7 +378,8 @@ abstract class Accessor
     protected function _setGetQuery()
     {
         $callback  = function ($key) { return "`{$key}` = :{$key}"; };
-        $where_str = join(' and ', array_map($callback, $this->_primary_key_list));
+        $primary_key_list = static::$_primary_key_list;
+        $where_str = join(' and ', array_map($callback, $primary_key_list));
         $this->_get_query = "select * from %s where {$where_str}";
     }
 

@@ -18,8 +18,7 @@ abstract class Model
     /**
      * クラス変数
      */
-    protected static $_instance   = array();
-    protected static $_field_list = array();
+    protected static $_instance = array();
 
     /**
      * インスタンスメンバ
@@ -34,7 +33,10 @@ abstract class Model
      */
     public static function create()
     {
-        return new static();
+        if  (!isset(static::$_instance[0])) {
+            static::$_instance[0] = new static();
+        }
+        return static::$_instance[0];
     }
 
     /**
@@ -60,6 +62,21 @@ abstract class Model
     }
 
     /**
+     * データが存在するかチェックする
+     * @param mixed $key
+     *
+     * @return bool
+     */
+    public function isExists($key)
+    {
+        $accessor_name = static::ACCESSOR_NAME;
+        if (isset($accessor_name::$_field_list[$key])) {
+            $this->_setData();
+        }
+        return isset($this->_data[$key]);
+    }
+
+    /**
      * データを取得する
      * @param mixed $key
      *
@@ -67,11 +84,28 @@ abstract class Model
      */
     public function get($key)
     {
-        if (isset(static::$_field_list[$key])) {
+        $accessor_name = static::ACCESSOR_NAME;
+        if (isset($accessor_name::$_field_list[$key])) {
             $this->_setData();
         }
         if (isset($this->_data[$key])) {
             return $this->_data[$key];
+        }
+    }
+
+    /**
+     * データをセットする
+     * @param mixed $key
+     * @param mixed $value
+     *
+     * @return void
+     */
+    public function set($key, $value)
+    {
+        $accessor_name = static::ACCESSOR_NAME;
+        if (isset($accessor_name::$_field_list[$key])) {
+            $this->_setData();
+            $this->_data[$key] = $value;
         }
     }
 
