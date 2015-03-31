@@ -28,6 +28,7 @@ abstract class Accessor
     protected static $_timestamp_field_list = array();
     protected static $_primary_key_list     = array();
     protected static $_field_list           = array();
+    protected static $_diff_field_list      = array();
 
     protected $_get_query;
     protected $_db_handler;
@@ -137,7 +138,7 @@ abstract class Accessor
     {
         list($div_key, $db_handler, $tbl_name) = $this->_getConnectParam($data_list, $div_hint, self::USE_MASTER);
         $set_prefix = 'set_';
-        $set_string = $this->_getQueryPhrase($data_list, ',', $set_prefix);
+        $set_string = $this->_getQueryPhrase($data_list, ',', $set_prefix, $is_insert = true);
         $sql        = "insert into {$tbl_name} set {$set_string}";
         $statement  = $db_handler->prepare($sql);
         $this->_statementBindValue($statement, $data_list, $set_prefix);
@@ -192,7 +193,7 @@ abstract class Accessor
         }
 
         $set_prefix    = 'set_';
-        $set_string    = $this->_getQueryPhrase($data_list, ',', $set_prefix, $isSaveMethod = true);
+        $set_string    = $this->_getQueryPhrase($data_list, ',', $set_prefix, $is_insert = true);
         $update_string = $this->_getQueryPhrase($no_primary_list, ',', $set_prefix);
         
         $sql       = "insert into {$tbl_name} set {$set_string} on duplicate key update {$update_string}";
@@ -281,20 +282,16 @@ abstract class Accessor
      *
      * @return string クエリフレーズ
      */
-    protected function _getQueryPhrase($list, $div_str, $key_prefix = '', $isSaveMethod = false)
+    protected function _getQueryPhrase($list, $div_str, $key_prefix = '', $is_insert = false)
     {
         $list = $this->_getFieldDataList($list);
         $keys = array_keys($list);
         $str  = join($div_str, array_map(
-            function ($key) use ($key_prefix, $isSaveMethod) {
+            function ($key) use ($key_prefix, $is_insert) {
                 if (in_array($key, static::$_timestamp_field_list)) {
                     return "`{$key}`=from_unixtime(:{$key_prefix}{$key})";
-                } else if (strstr($key, '_diff') !== false) {
-                    $base_key = str_replace('_diff', '', $key);
-                    if (in_array($base_key, static::$_primary_key_list)) {
-                        throw new \Simplight\Exception('プライマリキーは_diff指定できません', 'Accessor Error', STATUS_CODE_ERROR);
-                    }
-                    return $isSaveMethod ? "`{$base_key}`=:{$key_prefix}{$key}" : "`{$base_key}`=`{$base_key}`+:{$key_prefix}{$key}";
+                } else if (in_array($key, static::$_diff_field_list)) {
+                    return $is_insert ? "`{$key}`=:{$key_prefix}{$key}" : "`{$key}`=`{$key}`+:{$key_prefix}{$key}";
                 } else {
                     return "`{$key}`=:{$key_prefix}{$key}";
                 }
@@ -311,25 +308,10 @@ abstract class Accessor
      */
     protected function _getFieldDataList($list)
     {
-        $exist_key_list = array();
-        $return_list       = array();
+        $return_list    = array();
         foreach ($list as $key => $data) {
-            $is_diff_key = false;
-            $base_key    = $key;
-            // diff指定かどうかチェック
-            if (strstr($key, '_diff') !== false) {
-                $is_diff_key = true;
-                $base_key = str_replace('_diff', '', $key);
-            }
             // フィールドに登録されたデータかチェックする
-            if (!in_array($base_key, static::$_field_list)) {
-                continue;
-            }
-            // diff指定の場合は優先するため既存のデータをunset
-            if ($is_diff_key && isset($return_list[$key])) {
-                unset($return_list[$key]);
-            }
-            if (isset($return_list[$key])) {
+            if (!in_array($key, static::$_field_list) || isset($return_list[$key])) {
                 continue;
             }
             $return_list[$key] = $data;
