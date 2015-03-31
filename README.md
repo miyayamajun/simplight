@@ -1,2 +1,2 @@
 # simplight
-simplightはシンプルでライトなWAFです。
+simplightはシンプルでライトなWebアプリケーションフレームワークです。
