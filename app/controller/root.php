@@ -14,17 +14,14 @@ class Root extends \Simplight\Controller
 {
     public function root()
     {
-        $test = \Simplight\Accessor\UserAccount::create();
-        $result = $test->findAll(array('user_id' => 200));
-
-        foreach ($result as $key => $value) {
-            dump($value);
-        }
+        dump(__METHOD__);
+        dump($this->_get, $this->_post);
     }
 
     public function hoge()
     {
-        var_dump($this->_get, $this->_post);
+        dump(__METHOD__);
+        dump($this->_get, $this->_post);
     }
 
     public function insert()

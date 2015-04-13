@@ -51,7 +51,6 @@ abstract class Accessor
      */
     protected function __construct()
     {
-        sort($this->_primary_key_list);
         $this->_setDBConfigMap();
         $this->_setTableConfigMap();
         $this->_setDsnMap();
@@ -344,7 +343,7 @@ abstract class Accessor
     protected function _validate($param_list)
     {
         $key_list = array_keys($param_list);
-        if (sort($key_list) != static::$_primary_key_list) {
+        if ($key_list != static::$_primary_key_list) {
             throw new \Simplight\Exception('プライマリキーが一致しません', 'Accessor Error', STATUS_CODE_ERROR);
         }
         if (!isset($param_list[static::DIVISION_KEY_NAME])) {

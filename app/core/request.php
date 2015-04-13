@@ -98,9 +98,11 @@ final class Request
      */  
     private function _setRequestUri()
     {
-        $request_uri       = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
-        $request_uri_list = explode('/', htmlspecialchars($request_uri, ENT_QUOTES));
+        $request_uri_str  = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '/';
+        $uri_params_str    = strstr($request_uri_str, '?');
 
+        $request_uri      = str_replace($uri_params_str, '', $request_uri_str);
+        $request_uri_list = explode('/', htmlspecialchars($request_uri, ENT_QUOTES));
         $this->_request_uri = array_slice($request_uri_list, 1);
     }
 
@@ -143,10 +145,10 @@ final class Request
             'get'  => array(),
             'post' => array(),
         );
-        $get_param_list = array_slice($this->_request_uri, self::PARAMS_START_KEY);
-        foreach ($get_param_list as $param) {
-            $get_param          = htmlspecialchars($param, ENT_QUOTES);
-            $param_map['get'][] = $get_param;
+        foreach ($_GET as $key => $param) {
+            $get_key   = htmlspecialchars($key, ENT_QUOTES);
+            $get_param = htmlspecialchars($param, ENT_QUOTES);
+            $param_map['get'][$get_key] = $get_param;
         }
         foreach ($_POST as $key => $param) {
             $post_key   = htmlspecialchars($key,   ENT_QUOTES);
