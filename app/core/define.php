@@ -41,3 +41,8 @@ if (isset($_SERVER['HTTP_HOST'])) {
     define('HTTPS_ROOT_URL', "https://{$_SERVER['HTTP_HOST']}");
 }
 
+/**
+ * その他
+ */
+define('DB_SAVE_RETRY_COUNT', 10); // DB保存のリトライ回数
+

@@ -182,14 +182,7 @@ abstract class Accessor
         list($div_key, $db_handler, $tbl_name) = $this->_getConnectParam($data_list, $div_hint, self::USE_MASTER);
 
         // primary key の無い配列を作る
-        $no_primary_list  = $data_list;
-        $primary_key_list = static::$_primary_key_list;
-        foreach ($primary_key_list as $primary_key) {
-            if (!isset($no_primary_list[$primary_key])) {
-                continue;
-            }
-            unset($no_primary_list[$primary_key]);
-        }
+        $no_primary_list = $this->_getNoPrimaryKeyList($data_list);
 
         $set_prefix    = 'set_';
         $set_string    = $this->_getQueryPhrase($data_list, ',', $set_prefix, $is_insert = true);
@@ -201,29 +194,57 @@ abstract class Accessor
         return $statement->execute();
     }
 
-    public function insertMulti($key_list, $multi_data_list, $div_hint = null)
+    /**
+     * データを一括挿入する(重複するデータがある場合はエラー)
+     * @param array $multi_data_list 保存するデータリスト
+     * @param array $div_hint        対象テーブル指定用の分割キー連想配列(nullなら$param_listから分割キーを取得する)
+     *
+     * @return bool レコード挿入更新成功or失敗
+     */
+    public function bulkInsert($multi_data_list, $div_hint)
     {
-        list($div_key, $db_handler, $tbl_name) = $this->_getConnectParam($key_list, $div_hint, self::USE_MASTER);
-        $sql        = "insert into {$tbl_name} values ";
-        $values_str = '';
-        foreach ($multi_data_list as $idx => $data_list) {
-            $set_prefix  = "set_{$idx}_";
-            $values_str .= empty($values_str) ? '(' : ',(';
-            $values_str .= join(',', array_map(function($key) use ($set_prefix) {
-                $data_key = $set_prefix . $key;
-                return in_array($key, static::$_timestamp_field_list) ? "from_unixtime(:{$data_key})" : ":{$data_key}";
-            }, array_keys($data_list)));
-            $values_str .= ')';
-        }
-        $sql .= $values_str;
-        $statement = $db_handler->prepare($sql);
-        foreach ($multi_data_list as $idx => $data_list) {
-            $set_prefix  = "set_{$idx}_";
-            $this->_statementBindValue($statement, $data_list, $set_prefix);
-        }
-        return $statement->execute();
+        list($div_key, $db_handler, $tbl_name) = $this->_getConnectParam($div_hint, null, self::USE_MASTER);
+        $sql = $this->_getBulkInsertQuery($multi_data_list);
+
+        return $this->_bulkExecute($db_handler, $sql, $multi_data_list);
     }
 
+    /**
+     * データを一括挿入する(重複するデータがある場合は更新)
+     * @param array $multi_data_list 保存するデータリスト
+     * @param array $div_hint        対象テーブル指定用の分割キー連想配列(nullなら$param_listから分割キーを取得する)
+     *
+     * @return bool レコード挿入更新成功or失敗
+     */
+    public function bulkSave($multi_data_list, $div_hint)
+    {
+        list($div_key, $db_handler, $tbl_name) = $this->_getConnectParam($div_hint, null, self::USE_MASTER);
+        $sql = $this->_getBulkInsertQuery($multi_data_list);
+
+        // primary key の無い配列を作る
+        $tmp_data_list   = reset($multi_data_list);
+        $no_primary_list = $this->_getNoPrimaryKeyList($tmp_data_list);
+
+        $sql .= 'on duplicate key update ';
+        $update_string = '';
+        foreach ($no_primary_list as $key => $data) {
+            $sql .= empty($update_string) ? '' : ',';
+            if (in_array($key, static::$_diff_field_list)) {
+                $sql .= "`{$key}`=`{$key}`+values(`{$key}`)";
+            } else {
+                $sql .= "`{$key}`=values(`{$key}`)";
+            }
+        }
+        return $this->_bulkExecute($db_handler, $sql, $multi_data_list);
+    }
+
+    /**
+     * キー($param_list)に応じたレコードを削除する
+     * @param array $param_list where句生成用の連想配列
+     * @param array $div_hint   対象テーブル指定用の分割キー連想配列(nullなら$param_listから分割キーを取得する)
+     *
+     * @return bool レコード削除成功or失敗
+     */
     public function delete($param_list, $div_hint = null)
     {
         $this->_validate($param_list);
@@ -238,6 +259,14 @@ abstract class Accessor
         return $statement->execute();
     }
 
+    /**
+     * 指定したSQLを実行する
+     * @param string $sql              実行するSQL文
+     * @param array  $placeholder_list SQLにプレースホルダーが含まれる場合の置き換えリスト
+     * @param array  $div_hint   対象テーブル指定用の分割キー連想配列(nullなら$param_listから分割キーを取得する)
+     *
+     * @return mixed
+     */
     public function query($sql, $placeholder_list, $div_hint, $use_master = self::USE_MASTER)
     {
         list($div_key, $db_handler, $tbl_name) = $this->_getConnectParam($where_list, $div_hint, $use_master);
@@ -255,6 +284,39 @@ abstract class Accessor
             $statement->execute();
             return $statement->fetchAll();
         }
+    }
+
+    /**
+     * フィールドリストに登録されているキーか調べる
+     * @param mixed $key
+     *
+     * @return bool
+     */
+    public function isFieldKey($key)
+    {
+        return isset(static::$_field_list[$key]);
+    }
+
+    /**
+     * 差分保存対象フィールドリストに登録されているキーか調べる
+     * @param mixed $key
+     *
+     * @return bool
+     */
+    protected function isDiffFieldKey($key)
+    {
+        return isset(static::$_diff_field_list[$key]);
+    }
+
+    /**
+     * フィールドリストを取得する
+     * @param mixed $key
+     *
+     * @return bool
+     */
+    protected function getFieldList()
+    {
+        return static::$_field_list;
     }
 
     /**
@@ -297,6 +359,25 @@ abstract class Accessor
             }, $keys)
         );
         return $str;
+    }
+
+    /**
+     * プライマリキーを含まないデータを生成して取得する
+     * @param array $data_list
+     *
+     * @return array
+     */
+    protected function _getNoPrimaryKeyList($data_list)
+    {
+        $no_primary_list  = $data_list;
+        $primary_key_list = static::$_primary_key_list;
+        foreach ($primary_key_list as $primary_key) {
+            if (!isset($no_primary_list[$primary_key])) {
+                continue;
+            }
+            unset($no_primary_list[$primary_key]);
+        }
+        return $no_primary_list;
     }
 
     /**
@@ -362,6 +443,47 @@ abstract class Accessor
         $primary_key_list = static::$_primary_key_list;
         $where_str = join(' and ', array_map($callback, $primary_key_list));
         $this->_get_query = "select * from %s where {$where_str}";
+    }
+
+    /**
+     * 一括更新用のクエリを生成して取得する
+     * @param array $multi_data_list
+     *
+     * @return string
+     */
+    protected function _getBulkInsertQuery($multi_data_list)
+    {
+        $sql        = "insert into {$tbl_name} values ";
+        $values_str = '';
+        foreach ($multi_data_list as $idx => $data_list) {
+            $set_prefix  = "set_{$idx}_";
+            $values_str .= empty($values_str) ? '(' : ',(';
+            $values_str .= join(',', array_map(function($key) use ($set_prefix) {
+                $data_key = $set_prefix . $key;
+                return in_array($key, static::$_timestamp_field_list) ? "from_unixtime(:{$data_key})" : ":{$data_key}";
+            }, array_keys($data_list)));
+            $values_str .= ')';
+        }
+        $sql .= $values_str;
+        return $sql;
+    }
+
+    /**
+     * 一括更新の共通処理
+     * @param PDO instance $db_handler
+     * @param string       $sql
+     * @param array        $multi_data_list
+     *
+     * @return book 実行結果
+     */
+    protected function _bulkExecute($db_handler, $sql, $multi_data_list)
+    {
+        $statement = $db_handler->prepare($sql);
+        foreach ($multi_data_list as $idx => $data_list) {
+            $set_prefix  = "set_{$idx}_";
+            $this->_statementBindValue($statement, $data_list, $set_prefix);
+        }
+        return $statement->execute();
     }
 
     /**
