@@ -25,6 +25,7 @@ final class App
     private $_autoloader;
     private $_controller;
     private $_action;
+    private $_hook;
     
     public $request;
     public $view;
@@ -113,23 +114,26 @@ final class App
     public function main()
     {
         try {
-            $this->_executeHook();
-
             // リクエストから実行対象コントローラを呼び出す
             $controller_name   = $this->request->getControllerClassName();
             $this->_controller = new $controller_name($this);
-
+            
             // リクエストから実行対象アクションをセットする
             $action_name = $this->request->getActionName();
-            $this->_controller->before_action_method();
             if (!method_exists($this->_controller, $action_name)) {
                 throw new \Simplight\Exception('ページが見つかりませんでした<br>URLを確かめてください', 'ページが見つかりません', STATUS_CODE_NOT_FOUND);
             }
-
+            // コントローラー処理前にPRE_HOOKを実行する
+            $this->_executeHook('pre');
+            
             // コントローラメソッドを実行
+            $this->_controller->before_action_method();
             $this->_controller->$action_name();
             $this->_controller->after_action_method();
 
+            // コントローラー処理後にPOST_HOOKを実行する
+            $this->_executeHook('post');
+            
             // レンダリングフラグが有効ならレンダリングする
             if ($this->_controller->isRender()) {
                 $output = $this->view->fetch($this->_controller->getTemplatePath());
@@ -145,13 +149,20 @@ final class App
 
     /**
      * 有効なhookを実行する
+     * @param string $type
      *
      * @return void
      */
-    private function _executeHook()
+    private function _executeHook($type)
     {
-        $hook = new \Simplight\Hook($this);
-        $hook->execute();
+        if (!isset($this->_hook)) {
+            $this->_hook = new \Simplight\Hook($this);   
+        }
+        if ($type === 'pre') {
+            $this->_hook->preHookExecute();
+        } else if ($type === 'post') {
+            $this->_hook->postHookExecute();
+        }
     }
 
     /**

@@ -10,7 +10,8 @@ namespace Simplight;
  */
 final class Hook
 {
-    private $_hook_list;
+    private $_pre_hook_list;
+    private $_post_hook_list;
     private $_app;
 
     /**
@@ -33,34 +34,42 @@ final class Hook
      *
      * @return void
      */
-    public function execute()
+    public function preHookExecute()
     {
-        foreach ($this->_hook_list as $hook) {
+        if (empty($this->_pre_hook_list)) {
+            return;
+        }
+        foreach ($this->_pre_hook_list as $hook) {
+            $hook->execute();
+        }
+    } 
+
+    
+    /**
+     * _hook_listに登録されたHookを処理する
+     *
+     * @return void
+     */
+    public function postHookExecute()
+    {
+        if (empty($this->_post_hook_list)) {
+            return;
+        }
+        foreach ($this->_post_hook_list as $hook) {
             $hook->execute();
         }
     } 
 
     /**
-     * _hook_listをセットする
+     * jsonから実行可能なHookをリストに登録する
      *
      * @return void
      */
     private function _setup()
     {
-        $this->_hook_list = $this->_getHookList();
-    }
-
-    /**
-     * jsonから実行可能なHookをリストに登録する
-     *
-     * @return array Hookを継承したオブジェクトのリスト
-     */
-    private function _getHookList()
-    {
         $tmp_json         = file_get_contents(JSON_DIR . '/hook.json');
         $json             = mb_convert_encoding($tmp_json, 'utf8');
         $config_list      = json_decode(preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $json), true);
-        $active_hook_list = array();
 
         foreach ($config_list as $map) {
             if ($this->_app->getTimestamp() < strtotime($map['open_date'])) {
@@ -70,9 +79,12 @@ final class Hook
                 continue;
             }
             $hook_class_name = '\\Simplight\\Hook\\' . ucfirst($map['name']);
-            $active_hook_list[]  = new $hook_class_name($this->_app);
+            if (isset($map['type']) && $map['type'] === 'post') {
+                $this->_post_hook_list[]  = new $hook_class_name($this->_app);
+            } else {
+                $this->_pre_hook_list[]  = new $hook_class_name($this->_app);
+            }
         }
-        return $active_hook_list;
     }
 }
 
