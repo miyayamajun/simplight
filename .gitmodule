@@ -1,0 +1,2 @@
+[submodule "app"]
+    url = git@github.com:miyayamajun/simplight-core.git

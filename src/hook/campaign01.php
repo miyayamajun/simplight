@@ -3,7 +3,7 @@
 namespace Simplight\Hook;
 
 class Campaign01 extends \Simplight\HookBase
-{
+{   
     public static $target_action_list = array(
         'login_confirm',
     );
