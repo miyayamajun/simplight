@@ -12,6 +12,6 @@ class Error extends \Simplight\Controller
 {
     public function error($exception)
     {
-        var_dump($exception);
+        // エラー時の処理を記述
     }
 }
